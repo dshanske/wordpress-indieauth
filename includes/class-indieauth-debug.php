@@ -7,6 +7,8 @@ class IndieAuth_Debug {
 		add_filter( 'http_request_args', array( $this, 'indieauth_allow_localhost' ), 10, 2 );
 		add_filter( 'rest_post_dispatch', array( $this, 'log_rest_api_errors' ), 10, 3 );
 		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+		add_filter( 'query_vars', array( $this, 'query_var' ) );
+		add_action( 'parse_query', array( $this, 'echo_test' ) );
 	}
 
 	/**
@@ -83,6 +85,28 @@ class IndieAuth_Debug {
 				),
 			)
 		);
+	}
+
+	public function query_var( $vars ) {
+		$vars[] = 'iaetest';
+		return $vars;
+	}
+
+	public function echo_test( $wp ) {
+		if ( ! array_key_exists( 'iaetest', $wp->query_vars ) ) {
+			return;
+		}
+		// plain text header
+		header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
+		echo wp_json_encode(
+			array(
+				'server'                 => array_keys( $_SERVER ),
+				'getallheaders'          => array_keys( getallheaders() ),
+				'apache_request_headers' => function_exists( 'apache_request_headers' ) ? array_keys( apache_request_headers() ) : null,
+			),
+			JSON_PRETTY_PRINT
+		);
+		exit;
 	}
 
 	public function permissions_test( $request ) {
