@@ -98,11 +98,18 @@ class IndieAuth_Debug {
 		}
 		// plain text header
 		header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ) );
+		$server = array_map( 'sanitize_key', array_keys( $_SERVER ) );
+		$server = array_filter(
+			$server,
+			function( $val ) {
+				return ( 'http' === substr( $val, 0, 4 ) || 'redirect' === substr( $val, 0, 8 ) );
+			}
+		);
 		echo wp_json_encode(
 			array(
-				'server'                 => array_keys( $_SERVER ),
-				'getallheaders'          => array_keys( getallheaders() ),
-				'apache_request_headers' => function_exists( 'apache_request_headers' ) ? array_keys( apache_request_headers() ) : null,
+				'server'                 => $server,
+				'getallheaders'          => array_map( 'sanitize_key', array_keys( getallheaders() ) ),
+				'apache_request_headers' => function_exists( 'apache_request_headers' ) ? array_map( 'sanitize_key', array_keys( apache_request_headers() ) ) : null,
 			),
 			JSON_PRETTY_PRINT
 		);
